@@ -1,16 +1,45 @@
-# This is a sample Python script.
+import pygame
+from Game.Player import Player
+from Engine.EngineTime import EngineTime
 
-# Press Shift+F10 to execute it or replace it with your code.
-# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
+pygame.init()
 
+win = pygame.display.set_mode((500, 500))
 
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press Ctrl+F8 to toggle the breakpoint.
+pygame.display.set_caption("FogOfWar")
 
+x = 200
+y = 200
 
-# Press the green button in the gutter to run the script.
-if __name__ == '__main__':
-    print_hi('PyCharm')
+width = 10
+height = 10
 
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+vel = 200
+
+run = True
+
+getTicksLastFrame = 0
+
+player = Player("test", True, 1, 6)
+
+# oyun döngüsü
+while run:
+
+    for event in pygame.event.get():
+
+        if event.type == pygame.QUIT:
+            run = False
+
+    pygame.draw.rect(win, (255, 255, 255), (0, 0, 500, 500))
+
+    player.Update()
+    player.Render()
+
+    # delta time hesaplaması
+    t = pygame.time.get_ticks()
+    EngineTime.deltaTime = (t - getTicksLastFrame) / 1000.0
+    getTicksLastFrame = t
+
+    pygame.display.update()
+
+pygame.quit()
