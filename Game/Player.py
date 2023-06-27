@@ -5,6 +5,7 @@ from Engine.EngineTime import EngineTime
 
 class Player(GameObject):
     speed = 300
+    radius = 10
     def BeginPlay(self):
         print("begin play player")
 
@@ -30,4 +31,4 @@ class Player(GameObject):
 
     def Render(self):
         pygame.draw.rect(pygame.display.get_surface(), (255, 0, 0),
-                         (self.x, self.y, 10, 10))
+                         (self.x, self.y, 4, 4))
