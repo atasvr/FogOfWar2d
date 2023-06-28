@@ -7,37 +7,52 @@ from Game.TerrainManager import VisionGrid,Part,Terrain
 
 pygame.init()
 
-win = pygame.display.set_mode((500,
-                               500))
+gridSize = 256
+realSize = 1000
+
+win = pygame.display.set_mode((realSize, realSize))
 
 pygame.display.set_caption("FogOfWar")
 
 run = True
 getTicksLastFrame = 0
 
-player = Player("test", True, 1, 6)
+players = []
 
-terrain = Terrain(128, 0)
-visionGrid = VisionGrid(128, terrain)
-visionGrid.players.append(player)
+
+
+
+
+terrain = Terrain(gridSize, 0)
+visionGrid = VisionGrid(gridSize, realSize, terrain)
+
+
+for i in range(100):
+
+    player0 = Player("test", True, 10 * (i % 50), 10 * round(i / 2) )
+    if i > 30:
+        player0.radius = 2
+    players.append(player0)
+    visionGrid.players.append(player0)
+
 visionGrid.CalculateVision()
 def DrawBackground():
-    pygame.draw.rect(win, (0, 0, 0), (0,0,500,500))
-    size = 500/128
-    for x in range(128):
-        for y in range(128):
+    pygame.draw.rect(win, (0, 0, 0), (0,0,realSize,realSize))
+    size = realSize/gridSize
+    for x in range(gridSize):
+        for y in range(gridSize):
             color = (255,255,255)
             #playerPos = [(player.x + 5)/size, (player.y + 5)/size]
             #rectPos = [x +0.5, y+0.5]
-            if visionGrid.values[x + y * 128] is not None:
+            if visionGrid.values[x + y * gridSize] is not None:
                 color = (0,255,0)
-            if terrain.blocks[x + y * 128] == 1:
+            if terrain.blocks[x + y * gridSize] == 1:
                 color = (0,0,0)
 
             pygame.draw.rect(win, color, (size * x, size * y, size, size))
 
 
-
+visionUpdateTime = 0
 # oyun döngüsü
 while run:
 
@@ -48,12 +63,19 @@ while run:
 
 
     DrawBackground()
-    visionGrid.Update()
-    player.Update()
-    player.Render()
+    if pygame.time.get_ticks() > visionUpdateTime:
+        visionGrid.Update()
+        visionUpdateTime = pygame.time.get_ticks() + 500
+
+    for player0 in players:
+        player0.Update()
+        player0.Render()
+
+
 
     # delta time hesaplaması
     t = pygame.time.get_ticks()
+    print("delta time : " + str(EngineTime.deltaTime))
     EngineTime.deltaTime = (t - getTicksLastFrame) / 1000.0
     getTicksLastFrame = t
 

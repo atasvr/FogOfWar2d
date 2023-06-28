@@ -4,8 +4,8 @@ from Engine.EngineTime import EngineTime
 
 
 class Player(GameObject):
-    speed = 300
-    radius = 10
+    speed = 5
+    radius = 14
     def BeginPlay(self):
         print("begin play player")
 
@@ -15,7 +15,7 @@ class Player(GameObject):
         width = screensize[0]
         height = screensize[1]
 
-        print("x :" + str(self.x) + "y : " + str(self.y) )
+        #print("x :" + str(self.x) + "y : " + str(self.y) )
 
         if keys[pygame.K_a] and self.x > 0:
             self.x -= self.speed * EngineTime.deltaTime

@@ -29,8 +29,9 @@ class Part(object):
 
 class VisionGrid(object):
     players = []
-    def __init__(self, gridSize, terrain: Terrain):
+    def __init__(self, gridSize, realSize, terrain: Terrain):
         self.size = gridSize
+        self.realSize = realSize
         self.values = [None] * gridSize * gridSize
         self.terrain = terrain
 
@@ -46,17 +47,20 @@ class VisionGrid(object):
 
     def CalculateVision(self):
         for player in self.players:
-            circlePoints = self.GetCirclePosition([round(player.x * 128/500), round(player.y *128/500)], player.radius, [])
-            print("circle points")
-            print(circlePoints)
+            circlePoints = self.GetCirclePosition([round(player.x * self.size/self.realSize), round(player.y * self.size / self.realSize)], player.radius, [])
+            #print("circle points")
+            #print(circlePoints)
             for circle in circlePoints:
-                lines = self.GetLinePositions([round(player.x*128/500), round(player.y*128/500)], circle, [])
-                print("lines : ")
-                print(lines)
+                #lines = self.GetLinePositions([round(player.x*128/500), round(player.y*128/500)], circle, [])
+                lines = self.GetOrthogonalLine([round(player.x* self.size/self.realSize), round(player.y*self.size/self.realSize)], circle)
+                #print("lines : ")
+                #print(lines)
                 for line in lines:
-                    if self.terrain.blocks[line[0] + 128 * line[1]] == 1:
+                    if line[0] < 0 and line[0] > self.size and line[1] < 0 and line[1] > self.size:
                         break
-                    self.values[line[0] + 128 * line[1]] = 1
+                    if self.terrain.blocks[line[0] + self.size * line[1]] == 1:
+                        break
+                    self.values[line[0] + self.size * line[1]] = 1
 
 
     def GetCirclePosition(self, center, radius, upperBounds):
@@ -142,4 +146,35 @@ class VisionGrid(object):
             y += ystep
 
         return points
+
+    def GetOrthogonalLine(self, p0, p1):
+        dx = p1[0] - p0[0]
+        dy = p1[1] - p0[1]
+
+        nx = abs(dx)
+        ny = abs(dy)
+
+        sign_x = 1 if dx > 0 else -1
+        sign_y = 1 if dy > 0 else -1
+
+        p = [p0[0], p0[1]]
+        points = [[p[0], p[1]]]
+
+        ix = 0
+        iy = 0
+
+        while ix < nx or iy < ny:
+            decision = (1 + 2*ix) * ny - (1 + 2*iy) * nx
+
+            if decision < 0:
+                p[0] += sign_x
+                ix += 1
+            else:
+                p[1] += sign_y
+                iy += 1
+
+            points.append([p[0], p[1]])
+
+        return points
+
 
