@@ -4,10 +4,11 @@ from Engine.EngineTime import EngineTime
 
 
 class Player(GameObject):
-    speed = 5
-    radius = 14
+    teamId = 0
+    speed = 30
+    radius = 10
     def BeginPlay(self):
-        print("begin play player")
+        print("BeginPlay : " + self.name)
 
     def Update(self):
         keys = pygame.key.get_pressed()
@@ -30,5 +31,5 @@ class Player(GameObject):
             self.y += self.speed * EngineTime.deltaTime
 
     def Render(self):
-        pygame.draw.rect(pygame.display.get_surface(), (255, 0, 0),
-                         (self.x, self.y, 4, 4))
+        self.render = pygame.draw.rect(pygame.display.get_surface(), (255, 0, 0),
+                                       (self.x, self.y, 8, 8))

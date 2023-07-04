@@ -1,35 +1,16 @@
-from random import random
-import math
-
-
-class Terrain(object):
-
-    blocks = []
-    def __init__(self, gridSize, gamePos):
-        self.size = gridSize
-        self.GenerateMap(gamePos)
-
-    def GenerateMap(self, gamePos):
-        size = self.size * self.size
-        self.blocks = [0] * size
-
-        for i in range(size):
-            if(random() < 0.5):
-                self.blocks[i] = 1
-
-    def GetHeight(self, i):
-        return self.blocks[i[0] + (self.size * i[1])]
+from Game.BlockMap import BlockMap
 
 
 
-class Part(object):
+class GridPart(object):
     def __init__(self):
         self.players = []
 
 
 class VisionGrid(object):
     players = []
-    def __init__(self, gridSize, realSize, terrain: Terrain):
+
+    def __init__(self, gridSize, realSize, terrain: BlockMap):
         self.size = gridSize
         self.realSize = realSize
         self.values = [None] * gridSize * gridSize
@@ -47,21 +28,23 @@ class VisionGrid(object):
 
     def CalculateVision(self):
         for player in self.players:
-            circlePoints = self.GetCirclePosition([round(player.x * self.size/self.realSize), round(player.y * self.size / self.realSize)], player.radius, [])
-            #print("circle points")
-            #print(circlePoints)
+            circlePoints = self.GetCirclePosition(
+                [round(player.x * self.size / self.realSize), round(player.y * self.size / self.realSize)],
+                player.radius, [])
+            # print("circle points")
+            # print(circlePoints)
             for circle in circlePoints:
-                #lines = self.GetLinePositions([round(player.x*128/500), round(player.y*128/500)], circle, [])
-                lines = self.GetOrthogonalLine([round(player.x* self.size/self.realSize), round(player.y*self.size/self.realSize)], circle)
-                #print("lines : ")
-                #print(lines)
+                # lines = self.GetLinePositions([round(player.x*128/500), round(player.y*128/500)], circle, [])
+                lines = self.GetOrthogonalLine(
+                    [round(player.x * self.size / self.realSize), round(player.y * self.size / self.realSize)], circle)
+                # print("lines : ")
+                # print(lines)
                 for line in lines:
                     if line[0] < 0 and line[0] > self.size and line[1] < 0 and line[1] > self.size:
                         break
                     if self.terrain.blocks[line[0] + self.size * line[1]] == 1:
                         break
                     self.values[line[0] + self.size * line[1]] = 1
-
 
     def GetCirclePosition(self, center, radius, upperBounds):
         points = []
@@ -70,48 +53,48 @@ class VisionGrid(object):
         while i <= 1:
             x = 0
             y = radius
-            d = 3-2*radius
+            d = 3 - 2 * radius
 
-            while(y >= x):
+            while y >= x:
                 p = [center[0] + x, center[1] + y]
                 if p not in points:
-                  points.append(p)
+                    points.append(p)
 
                 p = [center[0] - x, center[1] + y]
                 if p not in points:
-                  points.append(p)
+                    points.append(p)
 
                 p = [center[0] + x, center[1] - y]
                 if p not in points:
-                  points.append(p)
+                    points.append(p)
 
                 p = [center[0] - x, center[1] - y]
                 if p not in points:
-                  points.append(p)
+                    points.append(p)
 
                 p = [center[0] + y, center[1] + x]
                 if p not in points:
-                  points.append(p)
+                    points.append(p)
 
                 p = [center[0] - y, center[1] + x]
                 if p not in points:
-                  points.append(p)
+                    points.append(p)
 
                 p = [center[0] + y, center[1] - x]
                 if p not in points:
-                  points.append(p)
+                    points.append(p)
 
                 p = [center[0] - y, center[1] - x]
                 if p not in points:
                     points.append(p)
 
-                x+=1
+                x += 1
 
-                if(d>0):
-                  y-=1
-                  d = d +4 *(x-y)+10
+                if (d > 0):
+                    y -= 1
+                    d = d + 4 * (x - y) + 10
                 else:
-                  d = d + 4 * x + 6
+                    d = d + 4 * x + 6
 
             i += 1
             radius -= 1
@@ -127,7 +110,7 @@ class VisionGrid(object):
         divN = 0
 
         if N != 0:
-            divN = 1/N
+            divN = 1 / N
 
         xstep = dx * divN
         ystep = dy * divN
@@ -164,7 +147,7 @@ class VisionGrid(object):
         iy = 0
 
         while ix < nx or iy < ny:
-            decision = (1 + 2*ix) * ny - (1 + 2*iy) * nx
+            decision = (1 + 2 * ix) * ny - (1 + 2 * iy) * nx
 
             if decision < 0:
                 p[0] += sign_x
@@ -176,5 +159,3 @@ class VisionGrid(object):
             points.append([p[0], p[1]])
 
         return points
-
-
