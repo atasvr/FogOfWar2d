@@ -1,44 +1,72 @@
 import pygame
 from Game.Player import Player
 from Engine.EngineTime import EngineTime
+from Game.BlockMap import BlockMap
+from Game.VisionGrid import VisionGrid, GridPart
+import time
+
 
 pygame.init()
 
-win = pygame.display.set_mode((500, 500))
+gridSize = 128
+realSize = 1024
 
+win = pygame.display.set_mode((realSize, realSize))
 pygame.display.set_caption("FogOfWar")
-
-x = 200
-y = 200
-
-width = 10
-height = 10
-
-vel = 200
 
 run = True
 
-getTicksLastFrame = 0
+players = []
+blockMap = BlockMap(gridSize, 0)
+visionGrid = VisionGrid(gridSize, realSize, blockMap)
 
-player = Player("test", True, 1, 6)
 
-# oyun döngüsü
+for i in range(1):
+    player0 = Player("test", True, 10 * (i % 50), 10 * round(i / 2))
+    if i > 30:
+        player0.radius = 2
+
+    player0.BeginPlay()
+    players.append(player0)
+    visionGrid.players.append(player0)
+
+def DrawBackground():
+    pygame.draw.rect(win, (0, 0, 0), (0,0,realSize,realSize))
+    size = realSize/gridSize
+    for x in range(gridSize):
+        for y in range(gridSize):
+            color = (255,255,255)
+            #playerPos = [(player.x + 5)/size, (player.y + 5)/size]
+            #rectPos = [x +0.5, y+0.5]
+            if visionGrid.values[x + y * gridSize] is 1:
+                color = (0,255,0)
+            if blockMap.blocks[x + y * gridSize] == 1:
+                color = (0,0,0)
+
+            pygame.draw.rect(win, color, (size * x, size * y, size, size))
+
+
+visionUpdateTime = 0
+
+# game loop
 while run:
 
     for event in pygame.event.get():
-
         if event.type == pygame.QUIT:
             run = False
 
-    pygame.draw.rect(win, (255, 255, 255), (0, 0, 500, 500))
+    DrawBackground()
 
-    player.Update()
-    player.Render()
+    before = time.time()
+    if pygame.time.get_ticks() > visionUpdateTime:
+        visionGrid.Update()
+        visionUpdateTime = pygame.time.get_ticks() + 0
 
-    # delta time hesaplaması
-    t = pygame.time.get_ticks()
-    EngineTime.deltaTime = (t - getTicksLastFrame) / 1000.0
-    getTicksLastFrame = t
+    for player0 in players:
+        player0.Update()
+        player0.Render()
+
+    EngineTime.Update(EngineTime)
 
     pygame.display.update()
 
