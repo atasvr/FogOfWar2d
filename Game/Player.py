@@ -1,36 +1,36 @@
-from Engine.GameObject import GameObject
+from __future__ import annotations
+
 import pygame
+
 from Engine.EngineTime import EngineTime
+from Engine.GameObject import GameObject
 
 
 class Player(GameObject):
     teamId = 0
     speed = 100
     radius = 20
-    
-    def BeginPlay(self):
+    size = 8
+
+    def BeginPlay(self) -> None:
         print("BeginPlay : " + self.name)
 
-    def Update(self):
+    def Update(self) -> None:
         keys = pygame.key.get_pressed()
-        screensize = pygame.display.get_surface().get_size()
-        width = screensize[0]
-        height = screensize[1]
+        width, height = pygame.display.get_surface().get_size()
 
-        #print("x :" + str(self.x) + "y : " + str(self.y) )
+        if keys[pygame.K_a]:
+            self.x = max(0, self.x - self.speed * EngineTime.deltaTime)
 
-        if keys[pygame.K_a] and self.x > 0:
-            self.x -= self.speed * EngineTime.deltaTime
+        if keys[pygame.K_d]:
+            self.x = min(width - self.size, self.x + self.speed * EngineTime.deltaTime)
 
-        if keys[pygame.K_d] and self.x < width - 10:
-            self.x += self.speed * EngineTime.deltaTime
+        if keys[pygame.K_w]:
+            self.y = max(0, self.y - self.speed * EngineTime.deltaTime)
 
-        if keys[pygame.K_w] and self.y > 0:
-            self.y -= self.speed * EngineTime.deltaTime
+        if keys[pygame.K_s]:
+            self.y = min(height - self.size, self.y + self.speed * EngineTime.deltaTime)
 
-        if keys[pygame.K_s] and self.y < height - 10:
-            self.y += self.speed * EngineTime.deltaTime
-
-    def Render(self):
-        self.render = pygame.draw.rect(pygame.display.get_surface(), (255, 0, 0),
-                                       (self.x, self.y, 8, 8))
+    def Render(self) -> None:
+        surface = pygame.display.get_surface()
+        self.render = pygame.draw.rect(surface, (255, 0, 0), (self.x, self.y, self.size, self.size))
