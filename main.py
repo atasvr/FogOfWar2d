@@ -2,7 +2,7 @@ import pygame
 from Game.Player import Player
 from Engine.EngineTime import EngineTime
 from Game.BlockMap import BlockMap
-from Game.VisionGrid import VisionGrid, GridPart
+from Game.VisionGrid import VisionGrid
 import time
 
 
@@ -38,7 +38,7 @@ def DrawBackground():
             color = (255,255,255)
             #playerPos = [(player.x + 5)/size, (player.y + 5)/size]
             #rectPos = [x +0.5, y+0.5]
-            if visionGrid.values[x + y * gridSize] is 1:
+            if visionGrid.values[x + y * gridSize] == 1:
                 color = (0,255,0)
             if blockMap.blocks[x + y * gridSize] == 1:
                 color = (0,0,0)
@@ -48,8 +48,12 @@ def DrawBackground():
 
 visionUpdateTime = 0
 
+# Prime the timing system so the first frame has a sensible baseline.
+EngineTime.reset()
+
 # game loop
 while run:
+    EngineTime.update()
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -65,8 +69,6 @@ while run:
     for player0 in players:
         player0.Update()
         player0.Render()
-
-    EngineTime.Update(EngineTime)
 
     pygame.display.update()
 

@@ -1,144 +1,121 @@
+"""Visibility grid implementation for the fog-of-war example."""
+
+from __future__ import annotations
+
+from typing import List, Sequence, Tuple
+
 from Game.BlockMap import BlockMap
 
-
-
-class GridPart(object):
-    def __init__(self):
-        self.players = []
+GridPoint = Tuple[int, int]
 
 
 class VisionGrid(object):
-    players = []
+    """Keeps track of which tiles are currently visible to the players."""
 
-    def __init__(self, gridSize, realSize, terrain: BlockMap):
+    def __init__(self, gridSize: int, realSize: int, terrain: BlockMap):
         self.size = gridSize
         self.realSize = realSize
-        self.values = [None] * gridSize * gridSize
+        self.values: List[int] = [0] * gridSize * gridSize
         self.terrain = terrain
+        self.players = []
 
-    def AddPlayer(self, player):
+    def AddPlayer(self, player) -> None:
         self.players.append(player)
 
-    def Clear(self):
-        self.values = [None] * self.size * self.size
+    def Clear(self) -> None:
+        for i in range(len(self.values)):
+            self.values[i] = 0
 
-    def Update(self):
+    def Update(self) -> None:
         self.Clear()
         self.CalculateVision()
 
-    def CalculateVision(self):
+    def CalculateVision(self) -> None:
         for player in self.players:
-            circlePoints = self.GetCirclePosition(
-                [round(player.x * self.size / self.realSize), round(player.y * self.size / self.realSize)],
-                player.radius, [])
-            # print("circle points")
-            # print(circlePoints)
-            for circle in circlePoints:
-                # lines = self.GetLinePositions([round(player.x*128/500), round(player.y*128/500)], circle, [])
-                points = self.GetOrthogonalLine(
-                    [round(player.x * self.size / self.realSize), round(player.y * self.size / self.realSize)], circle)
-                # print("lines : ")
-                # print(lines)
-                for point in points:
-                    if point[0] < 0 or point[0] > self.size or point[1] < 0 or point[1] >= self.size:
+            player_pos = self._world_to_grid(player.x, player.y)
+            circle_points = self.GetCirclePosition(player_pos, player.radius)
+            for circle in circle_points:
+                for point in self.GetOrthogonalLine(player_pos, circle):
+                    if not self._is_inside_grid(point):
                         break
                     if self.terrain.blocks[point[0] + self.size * point[1]] == 1:
                         break
                     self.values[point[0] + self.size * point[1]] = 1
 
-    def GetCirclePosition(self, center, radius, upperBounds):
-        points = []
+    def GetCirclePosition(self, center: GridPoint, radius: int) -> List[GridPoint]:
+        """Return a list of points along the perimeter of a circle."""
 
-        i = 0
-        while i <= 1:
+        points: set[GridPoint] = set()
+        current_radius = max(radius, 1)
+
+        for _ in range(2):
             x = 0
-            y = radius
-            d = 3 - 2 * radius
+            y = current_radius
+            d = 3 - 2 * current_radius
 
             while y >= x:
-                p = [center[0] + x, center[1] + y]
-                if p not in points:
-                    points.append(p)
-
-                p = [center[0] - x, center[1] + y]
-                if p not in points:
-                    points.append(p)
-
-                p = [center[0] + x, center[1] - y]
-                if p not in points:
-                    points.append(p)
-
-                p = [center[0] - x, center[1] - y]
-                if p not in points:
-                    points.append(p)
-
-                p = [center[0] + y, center[1] + x]
-                if p not in points:
-                    points.append(p)
-
-                p = [center[0] - y, center[1] + x]
-                if p not in points:
-                    points.append(p)
-
-                p = [center[0] + y, center[1] - x]
-                if p not in points:
-                    points.append(p)
-
-                p = [center[0] - y, center[1] - x]
-                if p not in points:
-                    points.append(p)
+                candidates = (
+                    (center[0] + x, center[1] + y),
+                    (center[0] - x, center[1] + y),
+                    (center[0] + x, center[1] - y),
+                    (center[0] - x, center[1] - y),
+                    (center[0] + y, center[1] + x),
+                    (center[0] - y, center[1] + x),
+                    (center[0] + y, center[1] - x),
+                    (center[0] - y, center[1] - x),
+                )
+                points.update(candidates)
 
                 x += 1
-
-                if (d > 0):
+                if d > 0:
                     y -= 1
-                    d = d + 4 * (x - y) + 10
+                    d += 4 * (x - y) + 10
                 else:
-                    d = d + 4 * x + 6
+                    d += 4 * x + 6
 
-            i += 1
-            radius -= 1
+            current_radius -= 1
 
-        return points
+        return list(points)
 
-    def GetLinePositions(self, p0, p1, upperBounds):
-        points = []
+    def GetLinePositions(self, p0: GridPoint, p1: GridPoint, upperBounds: Sequence[int] | None = None) -> List[GridPoint]:
+        """Return points for the line between ``p0`` and ``p1``.
+
+        The method remains available for compatibility, but the fog of war logic
+        relies on ``GetOrthogonalLine`` which better fits tile-based movement.
+        """
+
+        del upperBounds
+        points: List[GridPoint] = []
         dx = p1[0] - p0[0]
         dy = p1[1] - p0[1]
         N = max(abs(dx), abs(dy))
 
-        divN = 0
+        if N == 0:
+            return [p0]
 
-        if N != 0:
-            divN = 1 / N
+        xstep = dx / N
+        ystep = dy / N
+        x = float(p0[0])
+        y = float(p0[1])
 
-        xstep = dx * divN
-        ystep = dy * divN
-        x = p0[0]
-        y = p0[1]
-
-        step = 0
-        while step <= N:
-
-            point = [round(x), round(y)]
-            if point not in points:
+        for _ in range(N + 1):
+            point = (round(x), round(y))
+            if not points or points[-1] != point:
                 points.append(point)
-
-            step += 1
             x += xstep
             y += ystep
 
         return points
 
-    def GetOrthogonalLine(self, p0, p1):
+    def GetOrthogonalLine(self, p0: GridPoint, p1: GridPoint) -> List[GridPoint]:
         dx = p1[0] - p0[0]
         dy = p1[1] - p0[1]
 
         nx = abs(dx)
         ny = abs(dy)
 
-        sign_x = 1 if dx > 0 else -1
-        sign_y = 1 if dy > 0 else -1
+        sign_x = 0 if dx == 0 else (1 if dx > 0 else -1)
+        sign_y = 0 if dy == 0 else (1 if dy > 0 else -1)
 
         p = [p0[0], p0[1]]
         points = [[p[0], p[1]]]
@@ -158,4 +135,11 @@ class VisionGrid(object):
 
             points.append([p[0], p[1]])
 
-        return points
+        return [tuple(point) for point in points]
+
+    def _world_to_grid(self, x: float, y: float) -> GridPoint:
+        scale = self.size / self.realSize
+        return (round(x * scale), round(y * scale))
+
+    def _is_inside_grid(self, point: Sequence[int]) -> bool:
+        return 0 <= point[0] < self.size and 0 <= point[1] < self.size
